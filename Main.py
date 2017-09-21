@@ -1,49 +1,48 @@
 # -*- coding: utf-8 -*-
 
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.externals import joblib
+from sklearn.model_selection import LeaveOneOut
+import numpy as np
 import csv
 
 
+# CSVから特徴量読み込み
+# K近傍法の実装
+# 交差検証法にはLOOCV(Leave-One-Out Cross Validation)
 def main():
-    neigh = KNeighborsClassifier(n_neighbors=1)  # 最近傍法のオブジェクト生成
-
-    f = open("data/data.csv", 'r')  # fileのopen
-    data = csv.reader(f)  # ファイルの読み込み(str型)
+    K = 3  # K-NNのKの値
+    correct_answer_count = 0  # 正解数初期化
     x = []  # 初期化
     y = []  # 初期化
+    f = open("data/data_a.csv", 'r')  # fileのopen
+    data = csv.reader(f)  # ファイルの読み込み(str型)
 
     for row in data:
         x1 = []
         y.append(int(row[0]))  # ラベルを取得
-        x1.append(float(row[1]))  # 特徴ベクトルを取得
-
-        match_count = float(row[2])
-
-        for i in range(3, 21):
-            x1.append(float(row[i]) / match_count)
-        for i in range(21, 23):
+        for i in range(1, len(row)):  # 1列目から最後の列まで
             x1.append(float(row[i]))
         x.append(x1)
 
-    neigh.fit(x, y)
-    print(x)
-    print(y)
+    x = np.array(x)  # xをnumpy行列に変換
+    y = np.array(y)  # yをnumpy行列に変換
 
-    # 予測モデルをシリアライズ
-    joblib.dump(neigh, 'output/model.pkl')
-    # # 予測モデルをデシリアライズ
-    clf = joblib.load('output/model.pkl')
+    loo = LeaveOneOut()  # LOOCVのインスタンス生成
 
-    predict_data = [0.344, 4.204379562043796, 3.562043795620438, 0.7007299270072993, 1.2262773722627738, 0.20437956204379562, 0.021897810218978103, 0.1678832116788321, 1.9781021897810218, 0.5474452554744526, 0.0948905109489051, 0.021897810218978103, 0.0072992700729927005, 0.043795620437956206, 0.5912408759124088, 0.014598540145985401, 0.0, 0.48905109489051096, 0.043795620437956206, 0.555, 0.433]
-    # predict_data = [0.344, 4.204379562043796, 3.562043795620438, 0.7007299270072993, 1.2262773722627738, 0.20437956204379562, 0.021897810218978103, 0.1678832116788321, 1.9781021897810218, 0.5474452554744526, 0.0948905109489051, 0.021897810218978103, 0.0072992700729927005, 0.043795620437956206, 0.5912408759124088, 0.014598540145985401, 0.0, 0.48905109489051096, 0.043795620437956206, 0.555, 0.433]
-    predict_data2 = []
-    a = len(predict_data)
+    entire_num = loo.get_n_splits(x)  # テスト回数取得(csvファイルの行数)
 
-    predict_data2.append(predict_data)
-    print(clf.predict(predict_data2))
+    neigh = KNeighborsClassifier(n_neighbors=K)  # K-NNのインスタンス生成
 
-    print(a)
+    for train_index, test_index in loo.split(x):
+        x_train, x_test = x[train_index], x[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        neigh.fit(x_train, y_train)
+        result = neigh.predict(x_test)
+        if result == y_test:  # 出力したラベルと元々のラベルが一致していれば
+            correct_answer_count += 1
+
+    rate = (float(correct_answer_count) / float(entire_num))  # 正解率を計算
+    print(str(rate))  # 正解率を出力
 
 
 if __name__ == '__main__':

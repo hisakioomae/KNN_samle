@@ -29,7 +29,7 @@ def main():
 
     loo = LeaveOneOut()  # LOOCVのインスタンス生成
 
-    entire_num = loo.get_n_splits(x)  # テスト回数取得(csvファイルの行数)
+    entire_count = loo.get_n_splits(x)  # テスト回数取得(csvファイルの行数)
 
     neigh = KNeighborsClassifier(n_neighbors=K)  # K-NNのインスタンス生成
 
@@ -41,7 +41,7 @@ def main():
         if result == y_test:  # 出力したラベルと元々のラベルが一致していれば
             correct_answer_count += 1
 
-    rate = (float(correct_answer_count) / float(entire_num))  # 正解率を計算
+    rate = (float(correct_answer_count) / float(entire_count))  # 正解率を計算
     print(str(rate))  # 正解率を出力
 
 
